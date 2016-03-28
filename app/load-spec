@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+
+unset HOSTS
+declare -a HOSTS
+
+unset CERT_NAMES
+declare -A CERT_NAMES
+
+unset CORS_ALLOWED
+declare -A CORS_ALLOWED
+
+unset CORS_ORIGINS
+declare -A CORS_ORIGINS
+
+unset CORS_METHODS
+declare -A CORS_METHODS
+
+unset CORS_HEADERS
+declare -A CORS_HEADERS
+
+unset UPSTREAM
+declare -A UPSTREAM
+
+register-host () {
+  HOSTS+=("$1")
+}
+
+cert-name () {
+  # shellcheck disable=SC2034
+  CERT_NAMES["$1"]="$2"
+}
+
+cors-allowed () {
+  # shellcheck disable=SC2034
+  CORS_ALLOWED["$1"]="$2"
+}
+
+cors-origin () {
+  # shellcheck disable=SC2034
+  CORS_ORIGINS["$1"]="$2"
+}
+
+cors-methods () {
+  # shellcheck disable=SC2034
+  CORS_METHODS["$1"]="$2"
+}
+
+cors-headers () {
+  # shellcheck disable=SC2034
+  CORS_HEADERS["$1"]="$2"
+}
+
+default-host () {
+  # shellcheck disable=SC2034
+  DEFAULT_HOST="$1"
+}
+
+add-upstream () {
+  local hostname="$1"
+  local containername="$2"
+  local ipport="$3"
+
+  UPSTREAM["$hostname"]="${UPSTREAM["$hostname"]}
+  # ${containername}
+  server ${ipport};"
+}
+
+# shellcheck disable=SC1091
+source /output/spec

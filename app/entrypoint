@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+die () {
+  echo "$1"
+  exit 1
+}
+
+[ -z "${LETSENCRYPT_EMAIL}" ] && die "Please set 'LETSENCRYPT_EMAIL'"
+[ -z "${NGINX_CONTAINER}" ] && die "Please set 'NGINX_CONTAINER'"
+
+cp /app/acme-vhost.conf /etc/nginx/vhost.d/default
+
+if [[ ! -f /etc/nginx/certs/dhparam.pem ]]; then
+  openssl dhparam -out /etc/nginx/certs/dhparam.pem 2048
+fi
+
+letsencrypt-service () {
+  while true; do
+    sleep 3600
+    /app/update-certs
+  done
+}
+
+letsencrypt-service &
+exec docker-gen -watch -only-exposed -notify '/app/handle-new-spec' /app/spec.tmpl /output/spec

@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+docker-api () {
+  local scheme
+  local curl_opts=(-s)
+  local method=${2:-GET}
+  # data to POST
+  if [[ -n "${3:-}" ]]; then
+    curl_opts+=(-d "$3")
+  fi
+  if [[ $DOCKER_HOST == unix://* ]]; then
+    curl_opts+=(--unix-socket ${DOCKER_HOST#unix://})
+    scheme='http:'
+  else
+    scheme="http://${DOCKER_HOST#*://}"
+  fi
+  [[ $method = "POST" ]] && curl_opts+=(-H 'Content-Type: application/json')
+  curl "${curl_opts[@]}" -X${method} ${scheme}$1
+}
+
+docker-kill () {
+  local id="${1?missing id}"
+  local signal="${2?missing signal}"
+  docker-api "/containers/${id}/kill?signal=${signal}" "POST"
+}
+
+docker-kill "${NGINX_CONTAINER}" SIGHUP
