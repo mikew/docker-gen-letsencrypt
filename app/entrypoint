@@ -12,4 +12,9 @@ if [[ ! -f /etc/nginx/certs/dhparam.pem ]]; then
   openssl dhparam -out /etc/nginx/certs/dhparam.pem 2048
 fi
 
-exec docker-gen -watch -only-exposed -notify '/app/handle-new-spec' /app/spec.tmpl /output/spec
+/app/letsencrypt-service &
+exec docker-gen \
+    -watch \
+    -only-exposed \
+    -notify '/app/handle-new-spec' \
+    /app/spec.tmpl /output/spec
