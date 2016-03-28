@@ -26,6 +26,15 @@ gen-nginx-conf () {
 
 nginx-server-conf () {
   for host in ${HOSTS[@]}; do
+    if [ -f /etc/nginx/vhost.d/${host} ]; then
+      if ! grep -q '/.well-known/' /etc/nginx/vhost.d/${host}; then
+        echo >> /etc/nginx/vhost.d/${host}
+        cat /app/acme-vhost.conf >> /etc/nginx/vhost.d/${host}
+      fi
+    else
+      cp /app/acme-vhost.conf /etc/nginx/vhost.d/${host}
+    fi
+
     echo "upstream $host {
       ${UPSTREAM[$host]}
     }"
