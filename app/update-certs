@@ -17,6 +17,7 @@ for host in ${HOSTS[@]}; do
       --default_root /usr/share/nginx/html/
 
   if [ $? -eq 0 ]; then
+    reload_nginx="true"
     ln -s "${certdir}/fullchain.pem" /etc/nginx/certs/${host}.crt
     ln -s "${certdir}/key.pem" /etc/nginx/certs/${host}.key
     if [ -f /etc/nginx/certs/dhparam.pem ]; then
@@ -25,3 +26,8 @@ for host in ${HOSTS[@]}; do
   fi
   cd -
 done
+
+if [ -n "${reload_nginx}" ]; then
+  /app/gen-nginx-conf
+  /app/copy-nginx-config
+fi

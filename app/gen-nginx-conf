@@ -157,12 +157,3 @@ nginx-proxy-conf () {
 }
 
 gen-nginx-conf
-if ! cmp -s "${TMP_CONF}" "${REAL_CONF}"; then
-  cp "${TMP_CONF}" "${REAL_CONF}"
-  /app/reload-nginx
-  /app/update-certs
-  gen-nginx-conf
-  cp "${TMP_CONF}" "${REAL_CONF}"
-  /app/reload-nginx
-  echo 'config has changed'
-fi

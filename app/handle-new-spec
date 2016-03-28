@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
 
 /app/gen-nginx-conf
+/app/copy-nginx-config
+/app/update-certs

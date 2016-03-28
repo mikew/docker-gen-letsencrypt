@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+TMP_CONF="/output/nginx-tmp.conf"
+REAL_CONF="/etc/nginx/conf.d/default.conf"
+
+if ! cmp -s "${TMP_CONF}" "${REAL_CONF}"; then
+  cp "${TMP_CONF}" "${REAL_CONF}"
+  /app/reload-nginx
+fi
