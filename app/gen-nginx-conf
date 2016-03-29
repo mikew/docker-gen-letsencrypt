@@ -89,6 +89,15 @@ nginx-server-conf () {
       add_header Strict-Transport-Security \"max-age=31536000\";"
     fi
 
+    CORS_CONF=""
+    if [ "${CORS_ENABLED[$host]}" == "true" ]; then
+      CORS_CONF="add_header 'Access-Control-Allow-Credentials' 'true';
+      add_header 'Access-Control-Allow-Origin' '${CORS_ORIGIN[$host]:-*}';
+      add_header 'Access-Control-Allow-Methods' '${CORS_METHODS[$host]:-GET}';
+      add_header 'Access-Control-Allow-Headers' '${CORS_HEADERS[$host]:-Access-Control-Request-Headers,Authorization,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Accept-Encoding}';
+      "
+    fi
+
     AUTH_BASIC=""
     if [ -f "/etc/nginx/htpasswd/${host}" ]; then
       AUTH_BASIC="auth_basic \"Restricted ${host}\";
@@ -119,6 +128,7 @@ nginx-server-conf () {
 
       location / {
         proxy_pass http://${host};
+        ${CORS_CONF}
         ${AUTH_BASIC}
         ${EXTRA_CONF_LOCATION}
       }

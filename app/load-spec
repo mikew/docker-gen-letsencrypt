@@ -6,11 +6,11 @@ declare -a HOSTS
 unset CERT_NAMES
 declare -A CERT_NAMES
 
-unset CORS_ALLOWED
-declare -A CORS_ALLOWED
+unset CORS_ENABLED
+declare -A CORS_ENABLED
 
-unset CORS_ORIGINS
-declare -A CORS_ORIGINS
+unset CORS_ORIGIN
+declare -A CORS_ORIGIN
 
 unset CORS_METHODS
 declare -A CORS_METHODS
@@ -30,14 +30,14 @@ cert-name () {
   CERT_NAMES["$1"]="$2"
 }
 
-cors-allowed () {
+cors-enabled () {
   # shellcheck disable=SC2034
-  CORS_ALLOWED["$1"]="$2"
+  CORS_ENABLED["$1"]="$2"
 }
 
 cors-origin () {
   # shellcheck disable=SC2034
-  CORS_ORIGINS["$1"]="$2"
+  CORS_ORIGIN["$1"]="$2"
 }
 
 cors-methods () {

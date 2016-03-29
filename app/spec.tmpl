@@ -14,6 +14,10 @@ add-upstream '{{ .Host }}' '{{ .Container.Name }}' '{{ .Address.IP }}:{{ .Addres
 
 register-host '{{ $host }}'
 cert-name '{{ $host }}' '{{ or (first (groupByKeys $containers "Env.CERT_NAME")) "" }}'
+cors-enabled '{{ $host }}' '{{ or (first (groupByKeys $containers "Env.CORS_ENABLED")) "" }}'
+cors-origin '{{ $host }}' '{{ or (first (groupByKeys $containers "Env.CORS_ORIGIN")) "" }}'
+cors-methods '{{ $host }}' '{{ or (first (groupByKeys $containers "Env.CORS_METHODS")) "" }}'
+cors-headers '{{ $host }}' '{{ or (first (groupByKeys $containers "Env.CORS_HEADERS")) "" }}'
 
 {{ range $container := $containers }}
   {{ $addrLen := len $container.Addresses }}
