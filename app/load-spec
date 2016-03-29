@@ -50,11 +50,6 @@ cors-headers () {
   CORS_HEADERS["$1"]="$2"
 }
 
-default-host () {
-  # shellcheck disable=SC2034
-  DEFAULT_HOST="$1"
-}
-
 add-upstream () {
   local hostname="$1"
   local containername="$2"

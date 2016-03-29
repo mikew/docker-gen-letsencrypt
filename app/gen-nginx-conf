@@ -51,6 +51,11 @@ nginx-server-conf () {
       CERT_NAME="${CERT_NAMES[$host]}"
     fi
 
+    DEFAULT_SERVER_FLAG=""
+    if [ "${host}" == "${DEFAULT_SERVER}" ]; then
+      DEFAULT_SERVER_FLAG="default_server"
+    fi
+
     PORT="80"
     SSL_ENABLED=""
     SSL_CONF=""
@@ -65,7 +70,7 @@ nginx-server-conf () {
       fi
       HTTPS_REDIRECT="# Redirecto to https
       server {
-        server_name ${host};
+        server_name ${host} ${DEFAULT_SERVER_FLAG};
         listen 80;
         access_log /var/log/nginx/${host}.log;
         return 301 https://\$host\$request_uri;
@@ -106,7 +111,7 @@ nginx-server-conf () {
 
     echo "${HTTPS_REDIRECT}
     server {
-      server_name ${host};
+      server_name ${host} ${DEFAULT_SERVER_FLAG};
       listen ${PORT};
       access_log /var/log/nginx/${host}.log;
       ${SSL_CONF}

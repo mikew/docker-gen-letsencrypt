@@ -10,8 +10,6 @@ add-upstream '{{ .Host }}' '{{ .Container.Name }}' '{{ .Address.IP }}:{{ .Addres
   {{ end }}
 {{ end }}
 
-default-host '{{ or ($.Env.DEFAULT_HOST) "" }}'
-
 {{ range $host, $containers := groupByMulti $ "Env.VIRTUAL_HOST" "," }}
 
 register-host '{{ $host }}'
