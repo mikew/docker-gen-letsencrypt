@@ -1,30 +1,33 @@
 #!/usr/bin/env bash
+
+# shellcheck disable=SC1091
 source /app/load-spec
 
 ACME_CA_URI=${ACME_CA_URI:-https://acme-v01.api.letsencrypt.org/directory}
 #ACME_CA_URI="https://acme-staging.api.letsencrypt.org/directory"
 LETSENCRYPT_EMAIL="wyatt.mike@gmail.com"
 
-for host in ${HOSTS[@]}; do
+for host in "${HOSTS[@]}"; do
   certdir="/etc/nginx/certs/${host}"
   mkdir -p "${certdir}"
-  cd "${certdir}"
-  simp_le \
-      -f account_key.json -f key.pem -f fullchain.pem \
-      -d "${host}" \
-      --email "${LETSENCRYPT_EMAIL}" \
-      --server "${ACME_CA_URI}" \
-      --default_root /usr/share/nginx/html/
+  (
+    cd "${certdir}" || exit 1
+    simp_le \
+        -f account_key.json -f key.pem -f fullchain.pem \
+        -d "${host}" \
+        --email "${LETSENCRYPT_EMAIL}" \
+        --server "${ACME_CA_URI}" \
+        --default_root /usr/share/nginx/html/
+  )
 
   if [ $? -eq 0 ]; then
     reload_nginx="true"
-    ln -s "${certdir}/fullchain.pem" /etc/nginx/certs/${host}.crt
-    ln -s "${certdir}/key.pem" /etc/nginx/certs/${host}.key
+    ln -sf "${certdir}/fullchain.pem" "/etc/nginx/certs/${host}.crt"
+    ln -sf "${certdir}/key.pem" "/etc/nginx/certs/${host}.key"
     if [ -f /etc/nginx/certs/dhparam.pem ]; then
-      ln -s /etc/nginx/certs/dhparam.pem /etc/nginx/certs/${host}.dhparam.pem
+      ln -sf /etc/nginx/certs/dhparam.pem "/etc/nginx/certs/${host}.dhparam.pem"
     fi
   fi
-  cd -
 done
 
 if [ -n "${reload_nginx}" ]; then
