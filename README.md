@@ -24,11 +24,22 @@ htpasswd file to be used. When absent it will default to the value of
 `VIRTUAL_HOST`. If the file cannot be found in `/etc/nginx/htpasswd/`
 then basic auth will be disabled for the container.
 
+Set the `CORS_ENABLED` environment variable to add CORS headers. There
+are a few other environment variables you can set for further tuning:
+
+Variable Name | Default
+---|---
+`CORS_ORIGIN` | `*`
+`CORS_METHODS` | `GET`
+`CORS_HEADERS` | `Access-Control-Request-Headers,Authorization,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Accept-Encoding`
+
 If you would like to add aditional configuration to the generated
 reverse-proxy configuration, you have some options:
 
-- Add `/etc/nginx/vhost.d/HOST` to modify the `server` block
-- Add `/etc/nginx/vhost.d/HOST_location` to modify the `location` block
+- Add `/etc/nginx/vhost.d/${VIRTUAL_HOST}` to modify the `server` block
+- Add `/etc/nginx/vhost.d/${VIRTUAL_HOST}_location` to modify the `location` block
+- Add `/etc/nginx/vhost.d/default` to modify the `server` block
+- Add `/etc/nginx/vhost.d/default_location` to modify the `location` block
 
 ## Configuration
 
@@ -37,9 +48,10 @@ above. There are only a few settings for docker-gen-letsencrypt:
 
 Variable Name | Notes
 ---|---
-LETSENCRYPT_EMAIL | **Required.** Set this to your email.
-NGINX_CONTAINER | **Required.** Set this to the name of nginx container to be reloaded when the configuration changes.
-ACME_CA_URI | Defaults to `https://acme-v01.api.letsencrypt.org/directory`. You can change this to `https://acme-staging.api.letsencrypt.org/directory`
+`LETSENCRYPT_EMAIL` | **Required.** Set this to your email.
+`NGINX_CONTAINER` | **Required.** Set this to the name of nginx container to be reloaded when the configuration changes.
+`ACME_CA_URI` | Defaults to `https://acme-v01.api.letsencrypt.org/directory`. You can change this to `https://acme-staging.api.letsencrypt.org/directory`.
+`DEFAULT_SERVER` | Set this to the `VIRTUAL_HOST` of a container and the default server will be flagged in the generated configuration.
 
 ## Docker Compose
 
