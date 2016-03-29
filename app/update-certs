@@ -2,7 +2,7 @@
 source /app/load-spec
 
 ACME_CA_URI=${ACME_CA_URI:-https://acme-v01.api.letsencrypt.org/directory}
-ACME_CA_URI="https://acme-staging.api.letsencrypt.org/directory"
+#ACME_CA_URI="https://acme-staging.api.letsencrypt.org/directory"
 LETSENCRYPT_EMAIL="wyatt.mike@gmail.com"
 
 for host in ${HOSTS[@]}; do

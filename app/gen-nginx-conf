@@ -44,7 +44,7 @@ nginx-server-conf () {
     CERT_NAME="default"
     # If $host.crt exists, use $host
     if [ -f "/etc/nginx/certs/${host}.crt" ]; then
-      CERT_NAME="$host"
+      CERT_NAME="${host}"
     fi
     # If CERT_NAME defined in container env, use that
     if [ -n "${CERT_NAMES[$host]}" ]; then
