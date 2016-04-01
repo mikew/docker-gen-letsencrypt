@@ -62,7 +62,7 @@ main:
     - LETSENCRYPT_EMAIL=you@gmail.com
     - NGINX_CONTAINER=dockergenletsencrypt_nginx_1
   volumes:
-    - /var/run/docker.sock:/var/run/docker.sock
+    - /var/run/docker.sock:/var/run/docker.sock:ro
   volumes_from:
     - nginxdata
 
