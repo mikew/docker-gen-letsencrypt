@@ -12,6 +12,7 @@ for host in "${HOSTS[@]}"; do
   mkdir -p "${certdir}"
   (
     cd "${certdir}" || exit 1
+    echo "Generating certs for ${host} ..." | /app/log
     simp_le \
         -f account_key.json -f key.pem -f fullchain.pem \
         -d "${host}" \
@@ -33,4 +34,6 @@ done
 if [ -n "${reload_nginx}" ]; then
   /app/gen-nginx-conf
   /app/copy-nginx-config
+else
+  echo "No new certs, skipping reload of ${NGINX_CONTAINER}" | /app/log
 fi

@@ -24,4 +24,5 @@ docker-kill () {
   docker-api "/containers/${id}/kill?signal=${signal}" "POST"
 }
 
+echo "Reloading ${NGINX_CONTAINER}" | /app/log
 docker-kill "${NGINX_CONTAINER}" SIGHUP
