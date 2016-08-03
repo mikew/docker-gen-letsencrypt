@@ -18,7 +18,9 @@ for host in "${HOSTS[@]}"; do
         -d "${host}" \
         --email "${LETSENCRYPT_EMAIL}" \
         --server "${ACME_CA_URI}" \
-        --default_root /usr/share/nginx/html/
+        --default_root /usr/share/nginx/html/ \
+        --tos_sha256 6373439b9f29d67a5cd4d18cbc7f264809342dbf21cb2ba2fc7588df987a6221 \
+        |& /app/log
   )
 
   if [ $? -eq 0 ]; then
