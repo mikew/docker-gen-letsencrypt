@@ -10,7 +10,7 @@ docker-api () {
   fi
   if [[ $DOCKER_HOST == unix://* ]]; then
     curl_opts+=(--unix-socket ${DOCKER_HOST#unix://})
-    scheme='http:'
+    scheme="http://localhost"
   else
     scheme="http://${DOCKER_HOST#*://}"
   fi
@@ -25,4 +25,4 @@ docker-kill () {
 }
 
 echo "Reloading ${NGINX_CONTAINER}" | /app/log
-docker-kill "${NGINX_CONTAINER}" SIGHUP
+docker-kill "${NGINX_CONTAINER}" SIGHUP 2>&1 | /app/log
