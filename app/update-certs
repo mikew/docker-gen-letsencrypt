@@ -4,8 +4,7 @@
 source /app/load-spec
 
 ACME_CA_URI=${ACME_CA_URI:-https://acme-v01.api.letsencrypt.org/directory}
-#ACME_CA_URI="https://acme-staging.api.letsencrypt.org/directory"
-#LETSENCRYPT_EMAIL="wyatt.mike@gmail.com"
+GLOBAL_ACCOUNT_KEY_PATH="/etc/nginx/certs/account_key.json"
 
 for host in "${HOSTS[@]}"; do
   certdir="/etc/nginx/certs/${host}"
@@ -13,20 +12,33 @@ for host in "${HOSTS[@]}"; do
   (
     cd "${certdir}" || exit 1
     echo "Generating certs for ${host} ..." | /app/log
+
+    # If global account_key.json exists, copy it before running simp_le
+    if [ -e "${GLOBAL_ACCOUNT_KEY_PATH}" ]; then
+      ln -sf "${GLOBAL_ACCOUNT_KEY_PATH}" account_key.json
+    fi
+
     simp_le \
-        -f account_key.json -f key.pem -f fullchain.pem \
-        -d "${host}" \
-        --email "${LETSENCRYPT_EMAIL}" \
-        --server "${ACME_CA_URI}" \
-        --default_root /usr/share/nginx/html/ \
-        |& /app/log
+      -f account_key.json -f key.pem -f fullchain.pem \
+      -d "${host}" \
+      --email "${LETSENCRYPT_EMAIL}" \
+      --server "${ACME_CA_URI}" \
+      --default_root /usr/share/nginx/html/ \
+      |& /app/log
   )
 
   if [ $? -eq 0 ]; then
     reload_nginx="true"
+
+    # If global account_key.json did NOT exist, copy the generated one to its
+    # path
+    if [ ! -e "${GLOBAL_ACCOUNT_KEY_PATH}" ]; then
+      cp "${certdir}/account_key.json" "${GLOBAL_ACCOUNT_KEY_PATH}"
+    fi
+
     ln -sf "${certdir}/fullchain.pem" "/etc/nginx/certs/${host}.crt"
     ln -sf "${certdir}/key.pem" "/etc/nginx/certs/${host}.key"
-    if [ -f /etc/nginx/certs/dhparam.pem ]; then
+    if [ -e /etc/nginx/certs/dhparam.pem ]; then
       ln -sf /etc/nginx/certs/dhparam.pem "/etc/nginx/certs/${host}.dhparam.pem"
     fi
   fi
