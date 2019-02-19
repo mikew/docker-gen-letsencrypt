@@ -47,6 +47,7 @@ done
 if [ -n "${reload_nginx}" ]; then
   /app/gen-nginx-conf
   /app/copy-nginx-config
+  /app/reload-nginx
 else
   echo "No new certs, skipping reload of ${NGINX_CONTAINER}" | /app/log
 fi
