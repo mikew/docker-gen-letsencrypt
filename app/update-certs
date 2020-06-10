@@ -3,8 +3,9 @@
 # shellcheck disable=SC1091
 source /app/load-spec
 
-ACME_CA_URI=${ACME_CA_URI:-https://acme-v01.api.letsencrypt.org/directory}
+ACME_CA_URI=${ACME_CA_URI:-https://acme-v02.api.letsencrypt.org/directory}
 GLOBAL_ACCOUNT_KEY_PATH="/etc/nginx/certs/account_key.json"
+GLOBAL_ACCOUNT_KEY_PATH="/etc/nginx/certs/account_reg.json"
 
 for host in "${HOSTS[@]}"; do
   certdir="/etc/nginx/certs/${host}"
@@ -18,8 +19,12 @@ for host in "${HOSTS[@]}"; do
       ln -sf "${GLOBAL_ACCOUNT_KEY_PATH}" account_key.json
     fi
 
+    if [ -e "${GLOBAL_ACCOUNT_REG_PATH}" ]; then
+      ln -sf "${GLOBAL_ACCOUNT_REG_PATH}" account_key.json
+    fi
+
     simp_le \
-      -f account_key.json -f key.pem -f fullchain.pem \
+      -f account_reg.json -f account_key.json -f key.pem -f fullchain.pem \
       -d "${host}" \
       --email "${LETSENCRYPT_EMAIL}" \
       --server "${ACME_CA_URI}" \

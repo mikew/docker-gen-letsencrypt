@@ -8,8 +8,8 @@ RUN apk add --update bash curl \
         https://github.com/jwilder/docker-gen/releases/download/$DOCKER_GEN_VERSION/docker-gen-linux-amd64-$DOCKER_GEN_VERSION.tar.gz \
         | tar -xzv -C /usr/local/bin \
     && apk add gcc git py3-pip py3-setuptools python3 libffi-dev musl-dev openssl openssl-dev python3-dev \
-        && pip install git+git://github.com/zenhack/simp_le.git@$SIMP_LE_VERSION \
-        && apk del gcc git py3-pip libffi-dev musl-dev openssl-dev python3-dev
+        && pip install git+git://github.com/zenhack/simp_le.git@$SIMP_LE_VERSION requests requests[security] \
+        && apk del gcc git libffi-dev musl-dev openssl-dev python3-dev
 
 ENV DEBUG=false
 ENV DOCKER_HOST=unix:///var/run/docker.sock
