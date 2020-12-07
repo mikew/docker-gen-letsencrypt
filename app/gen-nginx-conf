@@ -29,15 +29,6 @@ gen-nginx-conf () {
 
 nginx-server-conf () {
   for host in "${HOSTS[@]}"; do
-    if [ -f "/etc/nginx/vhost.d/${host}" ]; then
-      if ! grep -q '/.well-known/' "/etc/nginx/vhost.d/${host}"; then
-        echo >> "/etc/nginx/vhost.d/${host}"
-        cat /app/acme-vhost.conf >> "/etc/nginx/vhost.d/${host}"
-      fi
-    else
-      cp /app/acme-vhost.conf "/etc/nginx/vhost.d/${host}"
-    fi
-
     echo "upstream $host {
       ${UPSTREAM[$host]}
     }"
@@ -63,11 +54,11 @@ nginx-server-conf () {
     SSL_CONF=""
     SSL_DHPARAM=""
     HTTPS_REDIRECT=""
-    if [ -f "/etc/nginx/certs/${CONTAINER_CERT_NAME}.crt" ]; then
+    if [ -f "/etc/nginx/certs/wildcard.crt" ]; then
     #if true; then
       PORT="443 ssl http2"
-      if [ -f "/etc/nginx/certs/${CONTAINER_CERT_NAME}.dhparam.pem" ]; then
-        SSL_DHPARAM="ssl_dhparam /etc/nginx/certs/${CONTAINER_CERT_NAME}.dhparam.pem;"
+      if [ -f "/etc/nginx/certs/dhparam.pem" ]; then
+        SSL_DHPARAM="ssl_dhparam /etc/nginx/certs/dhparam.pem;"
       fi
       HTTPS_REDIRECT="# Redirecto to https
       server {
@@ -83,8 +74,8 @@ nginx-server-conf () {
       ssl_session_timeout 5m;
       ssl_session_cache shared:SSL:50m;
 
-      ssl_certificate /etc/nginx/certs/${CONTAINER_CERT_NAME}.crt;
-      ssl_certificate_key /etc/nginx/certs/${CONTAINER_CERT_NAME}.key;
+      ssl_certificate /etc/nginx/certs/wildcard.crt;
+      ssl_certificate_key /etc/nginx/certs/wildcard.key;
       ${SSL_DHPARAM}
 
       add_header Strict-Transport-Security \"max-age=31536000\";"
