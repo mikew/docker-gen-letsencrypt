@@ -45,6 +45,14 @@ nginx-server-conf () {
       CONTAINER_CERT_NAME="${CERT_NAMES[$host]}"
     fi
 
+    # Get the basename of the dhparam
+    # Default is default
+    CONTAINER_DHPARAM_NAME="dhparam.pem"
+    # If $host.dhparam.pem exists, use $host
+    if [ -f "/etc/nginx/certs/${host}.dhparam.pem" ]; then
+      CONTAINER_DHPARAM_NAME="${host}.dhparam.pem"
+    fi
+
     DEFAULT_SERVER_FLAG=""
     if [ "${host}" == "${DEFAULT_SERVER}" ]; then
       DEFAULT_SERVER_FLAG="default_server"
@@ -57,8 +65,8 @@ nginx-server-conf () {
     if [ -f "/etc/nginx/certs/${CONTAINER_CERT_NAME}.crt" ]; then
     #if true; then
       PORT="443 ssl http2"
-      if [ -f "/etc/nginx/certs/dhparam.pem" ]; then
-        SSL_DHPARAM="ssl_dhparam /etc/nginx/certs/dhparam.pem;"
+      if [ -f "/etc/nginx/certs/${CONTAINER_DHPARAM_NAME}" ]; then
+        SSL_DHPARAM="ssl_dhparam /etc/nginx/certs/${CONTAINER_DHPARAM_NAME};"
       fi
       HTTPS_REDIRECT="# Redirecto to https
       server {
