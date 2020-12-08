@@ -70,8 +70,8 @@ Variable Name | Notes
 main:
   image: mikewhy/docker-gen-letsencrypt
   environment:
-    - LETSENCRYPT_EMAIL=wyatt.mike@gmail.com
-    - LETSENCRYPT_DOMAIN=mikewhy.xyz
+    - LETSENCRYPT_EMAIL=your@email.com
+    - LETSENCRYPT_DOMAIN=example.com
     - LETSENCRYPT_DNSAPI=dns_aws
     - NGINX_CONTAINER=docker-gen-letsencrypt_nginx_1
   volumes:
