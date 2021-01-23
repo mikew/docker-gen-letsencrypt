@@ -60,5 +60,12 @@ add-upstream () {
   server ${ipport};"
 }
 
-# shellcheck disable=SC1091
-source /output/spec
+if [ -s /output/spec ]; then
+  # shellcheck disable=SC1091
+  source /output/spec
+fi
+
+if [ -s /output/extra-spec ]; then
+  # shellcheck disable=SC1091
+  source /output/extra-spec
+fi
