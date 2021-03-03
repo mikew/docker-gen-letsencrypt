@@ -10,5 +10,5 @@ fi
   -d "$LETSENCRYPT_DOMAIN" \
   -d "*.$LETSENCRYPT_DOMAIN" \
   --accountemail "$LETSENCRYPT_EMAIL" \
-  --cert-file "/etc/nginx/certs/default.crt" \
+  --fullchain-file "/etc/nginx/certs/default.crt" \
   --key-file "/etc/nginx/certs/default.key"
