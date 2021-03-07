@@ -3,9 +3,9 @@
 docker-api () {
   local scheme
   local curl_opts=(-s)
-  local path=${1:-/}
-  local method=${2:-GET}
-  local data=${3:-}
+  local path="${1:-/}"
+  local method="${2:-GET}"
+  local data="${3:-}"
 
   if [ "${method}" != "GET" ]; then
     curl_opts+=(-X "${method}" -d "${data}")
@@ -16,7 +16,7 @@ docker-api () {
     curl_opts+=(--get)
     curl_opts+=(--data-urlencode "${data}")
   fi
-  if [[ $DOCKER_HOST == unix://* ]]; then
+  if [[ ${DOCKER_HOST} == unix://* ]]; then
     curl_opts+=(--unix-socket "${DOCKER_HOST#unix://}")
     scheme="http://localhost"
   else
@@ -28,7 +28,7 @@ docker-api () {
 docker-kill () {
   local id="${1?missing id}"
   local signal="${2?missing signal}"
-  docker-api "/containers/${id}/kill" "POST" "{\"signal\":\"${signal}\"}"
+  docker-api "/containers/${id}/kill?signal=${signal}" "POST"
 }
 
 join-array() {
@@ -50,9 +50,14 @@ split-to-lines() {
   done
 }
 
+reload-nginx-container() {
+  local container="$1"
+  echo "Reloading ${container}" | /app/log
+  docker-kill "${container}" SIGHUP 2>&1 | /app/log
+}
+
 if [ -n "${NGINX_CONTAINER}" ]; then
-  echo "Reloading ${NGINX_CONTAINER}" | /app/log
-  docker-kill "${NGINX_CONTAINER}" SIGHUP 2>&1 | /app/log
+  reload-nginx-container "${NGINX_CONTAINER}"
 fi
 
 if [ -n "${NGINX_LABELS}" ]; then
@@ -63,7 +68,6 @@ if [ -n "${NGINX_LABELS}" ]; then
   LABELS_JSON=$(join-array '","' "${LABELS[@]}")
 
   docker-api /containers/json GET "filters={\"label\":[\"${LABELS_JSON}\"]}" | jq -r ".[].Id" | while read -r id; do
-    echo "Reloading ${id}" | /app/log
-    docker-kill "${id}" SIGHUP 2>&1 | /app/log
+    reload-nginx-container "${id}"
   done
 fi
