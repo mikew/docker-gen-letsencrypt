@@ -8,6 +8,7 @@ RUN apk add --update \
     curl \
     sed \
     openssl \
+    jq \
   && curl -L \
     https://github.com/jwilder/docker-gen/releases/download/$DOCKER_GEN_VERSION/docker-gen-linux-amd64-$DOCKER_GEN_VERSION.tar.gz \
     | tar -xzv -C /usr/local/bin \

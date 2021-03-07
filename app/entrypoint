@@ -8,7 +8,7 @@ die () {
 [ -z "${LETSENCRYPT_EMAIL}" ] && die "Please set 'LETSENCRYPT_EMAIL'"
 [ -z "${LETSENCRYPT_DOMAIN}" ] && die "Please set 'LETSENCRYPT_DOMAIN'"
 [ -z "${LETSENCRYPT_DNSAPI}" ] && die "Please set 'LETSENCRYPT_DNSAPI'"
-[ -z "${NGINX_CONTAINER}" ] && die "Please set 'NGINX_CONTAINER'"
+[ -z "${NGINX_CONTAINER}" ] && [ -z "${NGINX_LABELS}" ]  && die "Please set 'NGINX_CONTAINER' or 'NGINX_LABELS'"
 
 if [[ ! -f /etc/nginx/certs/dhparam.pem ]]; then
   openssl dhparam -out /etc/nginx/certs/dhparam.pem 2048

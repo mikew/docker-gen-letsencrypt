@@ -61,7 +61,8 @@ Variable Name | Notes
 `LETSENCRYPT_EMAIL` | **Required.** Set this to your email.
 `LETSENCRYPT_DOMAIN` | **Required.** Set this to your domain for a wildcard certificate to be generated.
 `LETSENCRYPT_DNSAPI` | **Required.** Set this to a dnsapi provider in acme.sh
-`NGINX_CONTAINER` | **Required.** Set this to the name of nginx container to be reloaded when the configuration changes.
+`NGINX_CONTAINER` | Set this to the name of nginx container to be reloaded when the configuration changes.
+`NGINX_LABELS` | Comma-serparated list of labels. When configuration changes, they will be used to search for containers to reload.
 `DEFAULT_SERVER` | Set this to the `VIRTUAL_HOST` of a container and the default server will be flagged in the generated configuration.
 
 ## Docker Compose
