@@ -3,19 +3,26 @@
 docker-api () {
   local scheme
   local curl_opts=(-s)
-  local method=${2:-GET}
-  # data to POST
-  if [[ -n "${3:-}" ]]; then
-    curl_opts+=(-d "$3")
+  local path="${1:-/}"
+  local method="${2:-GET}"
+  local data="${3:-}"
+
+  if [ "${method}" != "GET" ]; then
+    curl_opts+=(-X "${method}" -d "${data}")
+    if [ -n "${data}" ]; then
+      curl_opts+=(-H "Content-Type: application/json")
+    fi
+  elif [ -n "${data}" ]; then
+    curl_opts+=(--get)
+    curl_opts+=(--data-urlencode "${data}")
   fi
-  if [[ $DOCKER_HOST == unix://* ]]; then
-    curl_opts+=(--unix-socket ${DOCKER_HOST#unix://})
+  if [[ ${DOCKER_HOST} == unix://* ]]; then
+    curl_opts+=(--unix-socket "${DOCKER_HOST#unix://}")
     scheme="http://localhost"
   else
     scheme="http://${DOCKER_HOST#*://}"
   fi
-  [[ $method = "POST" ]] && curl_opts+=(-H 'Content-Type: application/json')
-  curl "${curl_opts[@]}" -X"${method}" "${scheme}$1"
+  curl "${curl_opts[@]}" "${scheme}${path}"
 }
 
 docker-kill () {
@@ -24,5 +31,43 @@ docker-kill () {
   docker-api "/containers/${id}/kill?signal=${signal}" "POST"
 }
 
-echo "Reloading ${NGINX_CONTAINER}" | /app/log
-docker-kill "${NGINX_CONTAINER}" SIGHUP 2>&1 | /app/log
+join-array() {
+  local delimiter="$1"
+  shift
+
+  printf -v joined "%s${delimiter}" "$@"
+  echo "${joined%${delimiter}}"
+}
+
+split-to-lines() {
+  local array
+  local IFS
+  local delimiter="$1"
+
+  IFS="${delimiter}" read -r -a array <<< "$2"
+  for label in "${array[@]}"; do
+    echo "${label}" | xargs
+  done
+}
+
+reload-nginx-container() {
+  local container="$1"
+  echo "Reloading ${container}" | /app/log
+  docker-kill "${container}" SIGHUP 2>&1 | /app/log
+}
+
+if [ -n "${NGINX_CONTAINER}" ]; then
+  reload-nginx-container "${NGINX_CONTAINER}"
+fi
+
+if [ -n "${NGINX_LABELS}" ]; then
+  LABELS=()
+  while read -r _label; do
+    LABELS+=("$_label")
+  done < <(split-to-lines , "$NGINX_LABELS")
+  LABELS_JSON=$(join-array '","' "${LABELS[@]}")
+
+  docker-api /containers/json GET "filters={\"label\":[\"${LABELS_JSON}\"]}" | jq -r ".[].Id" | while read -r id; do
+    reload-nginx-container "${id}"
+  done
+fi
