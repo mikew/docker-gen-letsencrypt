@@ -118,44 +118,48 @@ nginx-server-conf () {
       EXTRA_CONF_LOCATION="include /etc/nginx/vhost.d/default_location;"
     fi
 
-    echo "${HTTPS_REDIRECT}
-    server {
-      server_name ${host} ${DEFAULT_SERVER_FLAG};
-      listen ${PORT};
-      access_log /var/log/nginx/${host}.log;
-      ${SSL_CONF}
-      ${EXTRA_CONF_SERVER}
+    echo "
+${HTTPS_REDIRECT}
+server {
+  server_name ${host} ${DEFAULT_SERVER_FLAG};
+  listen ${PORT};
+  access_log /var/log/nginx/${host}.log;
+  ${SSL_CONF}
+  ${EXTRA_CONF_SERVER}
 
-      location / {
-        proxy_pass http://${host};
-        ${CORS_CONF}
-        ${AUTH_BASIC}
-        ${EXTRA_CONF_LOCATION}
-      }
-    }"
+  location / {
+    proxy_pass http://${host};
+    ${CORS_CONF}
+    ${AUTH_BASIC}
+    ${EXTRA_CONF_LOCATION}
+  }
+}
+"
   done
 }
 
 nginx-gzip-conf () {
   if [ ! -f /etc/nginx/conf.d/gzip.conf ]; then
-    echo 'gzip on;
-    gzip_proxied any;
-    gzip_types
-        text/plain
-        text/css
-        text/javascript
-        application/javascript
-        application/json
-        application/x-javascript
-        js
-        text/xml
-        application/xml
-        application/rss+xml
-        image/svg+xml;
-    #gzip_min_length 256;
-    gzip_vary on;
-    gzip_disable "msie6";
-    gzip_comp_level 4;'
+    echo '
+gzip on;
+gzip_proxied any;
+gzip_types
+    text/plain
+    text/css
+    text/javascript
+    application/javascript
+    application/json
+    application/x-javascript
+    js
+    text/xml
+    application/xml
+    application/rss+xml
+    image/svg+xml;
+#gzip_min_length 256;
+gzip_vary on;
+gzip_disable "msie6";
+gzip_comp_level 4;
+'
   fi
 }
 
