@@ -8,19 +8,31 @@ TMP_CONF="/output/nginx-tmp.conf"
 gen-nginx-conf () {
   {
     # shellcheck disable=SC2016
-    echo '# If we receive X-Forwarded-Proto, pass it through; otherwise, pass along the
-    # scheme used to connect to this server
-    map $http_x_forwarded_proto $proxy_x_forwarded_proto {
-      default $http_x_forwarded_proto;
-      ""      $scheme;
-    }
+    echo '
+server_names_hash_bucket_size 128;
 
-    # If we receive Upgrade, set Connection to "upgrade"; otherwise, delete any
-    # Connection header that may have been passed to this server
-    map $http_upgrade $proxy_connection {
-      default upgrade;
-      "" close;
-    }'
+map $http_x_forwarded_proto $proxy_x_forwarded_proto {
+  default $http_x_forwarded_proto;
+  ""      $scheme;
+}
+
+# Set appropriate X-Forwarded-Ssl header based on $proxy_x_forwarded_proto
+map $proxy_x_forwarded_proto $proxy_x_forwarded_ssl {
+  default off;
+  https   on;
+}
+
+map $http_x_forwarded_port $proxy_x_forwarded_port {
+  default $http_x_forwarded_port;
+  ""      $server_port;
+}
+
+map $http_upgrade $proxy_connection {
+  default upgrade;
+  ""      close;
+}
+'
+
     nginx-gzip-conf
     nginx-proxy-conf
     nginx-server-conf
@@ -166,15 +178,22 @@ gzip_comp_level 4;
 nginx-proxy-conf () {
   if [ ! -f /etc/nginx/conf.d/proxy.conf ]; then
     # shellcheck disable=SC2016
-    echo '# HTTP 1.1 support
-    proxy_http_version 1.1;
-    proxy_buffering off;
-    proxy_set_header Host $http_host;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection $proxy_connection;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $proxy_x_forwarded_proto;'
+    echo '
+# HTTP 1.1 support
+proxy_http_version 1.1;
+proxy_buffering off;
+proxy_set_header Host $http_host;
+proxy_set_header Upgrade $http_upgrade;
+proxy_set_header Connection $proxy_connection;
+proxy_set_header X-Real-IP $remote_addr;
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Forwarded-Proto $proxy_x_forwarded_proto;
+proxy_set_header X-Forwarded-Ssl $proxy_x_forwarded_ssl;
+proxy_set_header X-Forwarded-Port $proxy_x_forwarded_port;
+
+# Mitigate httpoxy attack
+proxy_set_header Proxy "";
+'
   fi
 }
 
