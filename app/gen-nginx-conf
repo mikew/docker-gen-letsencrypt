@@ -8,19 +8,31 @@ TMP_CONF="/output/nginx-tmp.conf"
 gen-nginx-conf () {
   {
     # shellcheck disable=SC2016
-    echo '# If we receive X-Forwarded-Proto, pass it through; otherwise, pass along the
-    # scheme used to connect to this server
-    map $http_x_forwarded_proto $proxy_x_forwarded_proto {
-      default $http_x_forwarded_proto;
-      ""      $scheme;
-    }
+    echo '
+server_names_hash_bucket_size 128;
 
-    # If we receive Upgrade, set Connection to "upgrade"; otherwise, delete any
-    # Connection header that may have been passed to this server
-    map $http_upgrade $proxy_connection {
-      default upgrade;
-      "" close;
-    }'
+map $http_x_forwarded_proto $proxy_x_forwarded_proto {
+  default $http_x_forwarded_proto;
+  ""      $scheme;
+}
+
+# Set appropriate X-Forwarded-Ssl header based on $proxy_x_forwarded_proto
+map $proxy_x_forwarded_proto $proxy_x_forwarded_ssl {
+  default off;
+  https   on;
+}
+
+map $http_x_forwarded_port $proxy_x_forwarded_port {
+  default $http_x_forwarded_port;
+  ""      $server_port;
+}
+
+map $http_upgrade $proxy_connection {
+  default upgrade;
+  ""      close;
+}
+'
+
     nginx-gzip-conf
     nginx-proxy-conf
     nginx-server-conf
@@ -75,18 +87,29 @@ nginx-server-conf () {
         access_log /var/log/nginx/${host}.log;
         return 301 https://\$host\$request_uri;
       }"
-      SSL_CONF="ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+      SSL_CONF="ssl_protocols TLSv1.2 TLSv1.3;
       ssl_ciphers $(cat /app/ssl-ciphers);
 
-      ssl_prefer_server_ciphers on;
+      # https://github.com/mozilla/server-side-tls/issues/260#issuecomment-507392266
+      ssl_prefer_server_ciphers off;
       ssl_session_timeout 5m;
       ssl_session_cache shared:SSL:50m;
+      ssl_session_tickets off;
 
       ssl_certificate /etc/nginx/certs/${CONTAINER_CERT_NAME}.crt;
       ssl_certificate_key /etc/nginx/certs/${CONTAINER_CERT_NAME}.key;
       ${SSL_DHPARAM}
 
-      add_header Strict-Transport-Security \"max-age=31536000\";"
+      add_header Strict-Transport-Security \"max-age=31536000; includeSubDomains; preload\" always;
+
+      # OCSP stapling
+      ssl_stapling on;
+      ssl_stapling_verify on;
+
+      # enable ocsp stapling (mechanism by which a site can convey certificate
+      # revocation information to visitors in a privacy-preserving, scalable manner)
+      # http://blog.mozilla.org/security/2013/07/29/ocsp-stapling-in-firefox/
+      resolver 1.1.1.1 1.0.0.1 [2606:4700:4700::1111] [2606:4700:4700::1001];"
     fi
 
     CORS_CONF=""
@@ -118,59 +141,70 @@ nginx-server-conf () {
       EXTRA_CONF_LOCATION="include /etc/nginx/vhost.d/default_location;"
     fi
 
-    echo "${HTTPS_REDIRECT}
-    server {
-      server_name ${host} ${DEFAULT_SERVER_FLAG};
-      listen ${PORT};
-      access_log /var/log/nginx/${host}.log;
-      ${SSL_CONF}
-      ${EXTRA_CONF_SERVER}
+    echo "
+${HTTPS_REDIRECT}
+server {
+  server_name ${host} ${DEFAULT_SERVER_FLAG};
+  listen ${PORT};
+  access_log /var/log/nginx/${host}.log;
+  ${SSL_CONF}
+  ${EXTRA_CONF_SERVER}
 
-      location / {
-        proxy_pass http://${host};
-        ${CORS_CONF}
-        ${AUTH_BASIC}
-        ${EXTRA_CONF_LOCATION}
-      }
-    }"
+  location / {
+    proxy_pass http://${host};
+    ${CORS_CONF}
+    ${AUTH_BASIC}
+    ${EXTRA_CONF_LOCATION}
+  }
+}
+"
   done
 }
 
 nginx-gzip-conf () {
   if [ ! -f /etc/nginx/conf.d/gzip.conf ]; then
-    echo 'gzip on;
-    gzip_proxied any;
-    gzip_types
-        text/plain
-        text/css
-        text/javascript
-        application/javascript
-        application/json
-        application/x-javascript
-        js
-        text/xml
-        application/xml
-        application/rss+xml
-        image/svg+xml;
-    #gzip_min_length 256;
-    gzip_vary on;
-    gzip_disable "msie6";
-    gzip_comp_level 4;'
+    echo '
+gzip on;
+gzip_proxied any;
+gzip_types
+    text/plain
+    text/css
+    text/javascript
+    application/javascript
+    application/json
+    application/x-javascript
+    js
+    text/xml
+    application/xml
+    application/rss+xml
+    image/svg+xml;
+#gzip_min_length 256;
+gzip_vary on;
+gzip_disable "msie6";
+gzip_comp_level 4;
+'
   fi
 }
 
 nginx-proxy-conf () {
   if [ ! -f /etc/nginx/conf.d/proxy.conf ]; then
     # shellcheck disable=SC2016
-    echo '# HTTP 1.1 support
-    proxy_http_version 1.1;
-    proxy_buffering off;
-    proxy_set_header Host $http_host;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection $proxy_connection;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $proxy_x_forwarded_proto;'
+    echo '
+# HTTP 1.1 support
+proxy_http_version 1.1;
+proxy_buffering off;
+proxy_set_header Host $http_host;
+proxy_set_header Upgrade $http_upgrade;
+proxy_set_header Connection $proxy_connection;
+proxy_set_header X-Real-IP $remote_addr;
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Forwarded-Proto $proxy_x_forwarded_proto;
+proxy_set_header X-Forwarded-Ssl $proxy_x_forwarded_ssl;
+proxy_set_header X-Forwarded-Port $proxy_x_forwarded_port;
+
+# Mitigate httpoxy attack
+proxy_set_header Proxy "";
+'
   fi
 }
 
