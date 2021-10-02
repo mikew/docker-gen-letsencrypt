@@ -87,18 +87,29 @@ nginx-server-conf () {
         access_log /var/log/nginx/${host}.log;
         return 301 https://\$host\$request_uri;
       }"
-      SSL_CONF="ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+      SSL_CONF="ssl_protocols TLSv1.2 TLSv1.3;
       ssl_ciphers $(cat /app/ssl-ciphers);
 
-      ssl_prefer_server_ciphers on;
+      # https://github.com/mozilla/server-side-tls/issues/260#issuecomment-507392266
+      ssl_prefer_server_ciphers off;
       ssl_session_timeout 5m;
       ssl_session_cache shared:SSL:50m;
+      ssl_session_tickets off;
 
       ssl_certificate /etc/nginx/certs/${CONTAINER_CERT_NAME}.crt;
       ssl_certificate_key /etc/nginx/certs/${CONTAINER_CERT_NAME}.key;
       ${SSL_DHPARAM}
 
-      add_header Strict-Transport-Security \"max-age=31536000\";"
+      add_header Strict-Transport-Security \"max-age=31536000; includeSubDomains; preload\" always;
+
+      # OCSP stapling
+      ssl_stapling on;
+      ssl_stapling_verify on;
+
+      # enable ocsp stapling (mechanism by which a site can convey certificate
+      # revocation information to visitors in a privacy-preserving, scalable manner)
+      # http://blog.mozilla.org/security/2013/07/29/ocsp-stapling-in-firefox/
+      resolver 1.1.1.1 1.0.0.1 [2606:4700:4700::1111] [2606:4700:4700::1001];"
     fi
 
     CORS_CONF=""
