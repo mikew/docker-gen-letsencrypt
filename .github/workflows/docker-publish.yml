@@ -44,14 +44,14 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: mikewhy/docker-gen-letsencrypt
-          flavor: |
-            latest=true
-#           tags: |
-#             type=match,pattern=master,value=latest
-#             type=schedule,pattern=nightly
-#             type=ref,event=branch
-#             type=ref,event=tag
-#             type=ref,event=pr,prefix=pr-
+#           flavor: |
+#             latest=true
+          tags: |
+            type=raw,value=latest,enable=${{endsWith(github.ref, github.event.repository.default_branch)}}
+            type=schedule,pattern=nightly
+            type=ref,event=branch
+            type=ref,event=tag
+            type=ref,event=pr,prefix=pr-
 
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
