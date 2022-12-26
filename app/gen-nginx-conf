@@ -41,6 +41,10 @@ map $http_upgrade $proxy_connection {
 
 nginx-server-conf () {
   for host in "${HOSTS[@]}"; do
+    if [ -z "${UPSTREAM[$host]}" ]; then
+      continue
+    fi
+
     echo "upstream $host {
       ${UPSTREAM[$host]}
     }"
