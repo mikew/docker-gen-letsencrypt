@@ -21,6 +21,5 @@ tail -f -n 0 /output/log &
 /app/letsencrypt-service &
 exec docker-gen \
     -watch \
-    -only-exposed \
     -notify /app/handle-new-spec \
     /app/spec.tmpl /output/spec
